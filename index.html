@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Monitor | barada.my.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    async function refreshData() {
+        try {
+            const res = await fetch('process.php');
+            const data = await res.json();
+            
+            // Update CPU
+            document.getElementById('cpu-percent').textContent = `${data.cpu}%`;
+            document.getElementById('cpu-bar').style.width = `${data.cpu}%`;
+            
+            // Update RAM
+            document.getElementById('ram-percent').textContent = `${data.ram.percent}%`;
+            document.getElementById('ram-text').textContent = 
+                `${data.ram.used}MB / ${data.ram.total}MB`;
+            document.getElementById('ram-bar').style.width = `${data.ram.percent}%`;
+            
+            // Update Disk
+            document.getElementById('disk-percent').textContent = `${data.disk.percent}%`;
+            document.getElementById('disk-text').textContent = 
+                `${data.disk.used}GB / ${data.disk.total}GB`;
+            document.getElementById('disk-bar').style.width = `${data.disk.percent}%`;
+            
+            // Update Uptime
+            document.getElementById('uptime').textContent = data.uptime;
+            
+        } catch (e) {
+            console.error("Error fetching data:", e);
+        }
+    }
+    
+    // Refresh every 2 seconds
+    setInterval(refreshData, 2000);
+    window.onload = refreshData;
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-center text-blue-400">
+            🖥️ Server Monitoring
+        </h1>
+        
+        <!-- CPU Card -->
+        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+            <div class="flex justify-between mb-2">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <span class="w-6">🔵</span> CPU Usage
+                </h2>
+                <span id="cpu-percent" class="font-mono font-bold">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3">
+                <div id="cpu-bar" class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- RAM Card -->
+        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+            <div class="flex justify-between mb-2">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <span class="w-6">🟢</span> RAM Usage
+                </h2>
+                <div>
+                    <span id="ram-percent" class="font-mono font-bold">0%</span>
+                    <span class="text-gray-400 text-sm ml-2" id="ram-text">0MB/0MB</span>
+                </div>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3">
+                <div id="ram-bar" class="bg-green-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Disk Card -->
+        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
+            <div class="flex justify-between mb-2">
+                <h2 class="text-xl font-semibold flex items-center">
+                    <span class="w-6">🟣</span> Disk Usage
+                </h2>
+                <div>
+                    <span id="disk-percent" class="font-mono font-bold">0%</span>
+                    <span class="text-gray-400 text-sm ml-2" id="disk-text">0GB/0GB</span>
+                </div>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-3">
+                <div id="disk-bar" class="bg-purple-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Uptime -->
+        <div class="bg-gray-800 rounded-xl p-5 shadow-lg">
+            <h2 class="text-xl font-semibold flex items-center">
+                <span class="w-6">⏱️</span> Uptime: 
+                <span id="uptime" class="font-mono ml-2">Loading...</span>
+            </h2>
+        </div>
+    </div>
+</body>
+</html>
