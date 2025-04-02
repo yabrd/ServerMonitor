@@ -3,101 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Monitor | barada.my.id</title>
+    <title>Radxa Cubie A5E Monitor</title>
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-    async function refreshData() {
-        try {
-            const res = await fetch('process.php');
-            const data = await res.json();
-            
-            // Update CPU
-            document.getElementById('cpu-percent').textContent = `${data.cpu}%`;
-            document.getElementById('cpu-bar').style.width = `${data.cpu}%`;
-            
-            // Update RAM
-            document.getElementById('ram-percent').textContent = `${data.ram.percent}%`;
-            document.getElementById('ram-text').textContent = 
-                `${data.ram.used}MB / ${data.ram.total}MB`;
-            document.getElementById('ram-bar').style.width = `${data.ram.percent}%`;
-            
-            // Update Disk
-            document.getElementById('disk-percent').textContent = `${data.disk.percent}%`;
-            document.getElementById('disk-text').textContent = 
-                `${data.disk.used}GB / ${data.disk.total}GB`;
-            document.getElementById('disk-bar').style.width = `${data.disk.percent}%`;
-            
-            // Update Uptime
-            document.getElementById('uptime').textContent = data.uptime;
-            
-        } catch (e) {
-            console.error("Error fetching data:", e);
+    <!-- Chart.js untuk grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .card {
+            transition: all 0.3s ease;
         }
-    }
-    
-    // Refresh every 2 seconds
-    setInterval(refreshData, 2000);
-    window.onload = refreshData;
-    </script>
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-6">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8 text-center text-blue-400">
-            🖥️ Server Monitoring
-        </h1>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">🖥️ Radxa Cubie A5E Monitor</h1>
+        <p class="text-center text-gray-600 mb-8">Real-time System Monitoring</p>
         
-        <!-- CPU Card -->
-        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
-            <div class="flex justify-between mb-2">
-                <h2 class="text-xl font-semibold flex items-center">
-                    <span class="w-6">🔵</span> CPU Usage
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- CPU Card -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    CPU Information
                 </h2>
-                <span id="cpu-percent" class="font-mono font-bold">0%</span>
-            </div>
-            <div class="w-full bg-gray-700 rounded-full h-3">
-                <div id="cpu-bar" class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-        </div>
-        
-        <!-- RAM Card -->
-        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
-            <div class="flex justify-between mb-2">
-                <h2 class="text-xl font-semibold flex items-center">
-                    <span class="w-6">🟢</span> RAM Usage
-                </h2>
-                <div>
-                    <span id="ram-percent" class="font-mono font-bold">0%</span>
-                    <span class="text-gray-400 text-sm ml-2" id="ram-text">0MB/0MB</span>
+                <div class="space-y-2">
+                    <p><span class="font-medium">Model:</span> <span id="cpu-model" class="font-mono">-</span></p>
+                    <p><span class="font-medium">Usage:</span> <span id="cpu-usage" class="font-mono">-</span>%</p>
+                    <p><span class="font-medium">Speed:</span> <span id="cpu-speed" class="font-mono">-</span> MHz</p>
+                    <p><span class="font-medium">Temp:</span> <span id="cpu-temp" class="font-mono">-</span>°C</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                        <div id="cpu-bar" class="bg-red-500 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
-            <div class="w-full bg-gray-700 rounded-full h-3">
-                <div id="ram-bar" class="bg-green-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-        </div>
-        
-        <!-- Disk Card -->
-        <div class="bg-gray-800 rounded-xl p-5 mb-6 shadow-lg">
-            <div class="flex justify-between mb-2">
-                <h2 class="text-xl font-semibold flex items-center">
-                    <span class="w-6">🟣</span> Disk Usage
+
+            <!-- Memory Card -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h6v6H9V9z"></path>
+                    </svg>
+                    Memory Usage
                 </h2>
-                <div>
-                    <span id="disk-percent" class="font-mono font-bold">0%</span>
-                    <span class="text-gray-400 text-sm ml-2" id="disk-text">0GB/0GB</span>
+                <div class="space-y-2">
+                    <p><span class="font-medium">Total:</span> <span id="mem-total" class="font-mono">-</span> MB</p>
+                    <p><span class="font-medium">Used:</span> <span id="mem-used" class="font-mono">-</span> MB</p>
+                    <p><span class="font-medium">Free:</span> <span id="mem-free" class="font-mono">-</span> MB</p>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                        <div id="mem-bar" class="bg-blue-500 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
-            <div class="w-full bg-gray-700 rounded-full h-3">
-                <div id="disk-bar" class="bg-purple-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+
+            <!-- System Info Card -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    System Information
+                </h2>
+                <div class="space-y-2">
+                    <p><span class="font-medium">OS:</span> <span id="os-distro" class="font-mono">-</span></p>
+                    <p><span class="font-medium">Uptime:</span> <span id="os-uptime" class="font-mono">-</span></p>
+                    <p><span class="font-medium">Arch:</span> <span id="os-arch" class="font-mono">-</span></p>
+                </div>
             </div>
         </div>
-        
-        <!-- Uptime -->
-        <div class="bg-gray-800 rounded-xl p-5 shadow-lg">
-            <h2 class="text-xl font-semibold flex items-center">
-                <span class="w-6">⏱️</span> Uptime: 
-                <span id="uptime" class="font-mono ml-2">Loading...</span>
+
+        <!-- Storage Section -->
+        <div class="card bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"></path>
+                </svg>
+                Storage Information
             </h2>
+            <div id="storage-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500">Loading storage information...</p>
+            </div>
+        </div>
+
+        <!-- Network and Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Network Card -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Network Information
+                </h2>
+                <div class="space-y-2">
+                    <p><span class="font-medium">Interface:</span> <span id="net-interface" class="font-mono">-</span></p>
+                    <p><span class="font-medium">RX:</span> <span id="net-rx" class="font-mono">-</span> MB</p>
+                    <p><span class="font-medium">TX:</span> <span id="net-tx" class="font-mono">-</span> MB</p>
+                </div>
+            </div>
+
+            <!-- CPU Usage Chart -->
+            <div class="card bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">CPU Usage History</h2>
+                <canvas id="cpuChart" height="200"></canvas>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Data untuk chart
+        const cpuHistory = {
+            labels: [],
+            data: [],
+            maxPoints: 20
+        };
+
+        // Format waktu uptime
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / (3600*24));
+            const hours = Math.floor(seconds % (3600*24) / 3600);
+            const mins = Math.floor(seconds % 3600 / 60);
+            
+            return `${days}d ${hours}h ${mins}m`;
+        }
+
+        // Format bytes ke MB/GB
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+        }
+
+        async function fetchSystemData() {
+            try {
+                const response = await fetch('/api/system');
+                const data = await response.json();
+                const now = new Date();
+                const timeString = now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds();
+                
+                // Update CPU info
+                document.getElementById('cpu-model').textContent = data.cpu.model;
+                document.getElementById('cpu-usage').textContent = data.cpu.usage;
+                document.getElementById('cpu-speed').textContent = data.cpu.speed;
+                document.getElementById('cpu-temp').textContent = data.temperature.main;
+                document.getElementById('cpu-bar').style.width = `${data.cpu.usage}%`;
+                
+                // Update Memory info
+                document.getElementById('mem-total').textContent = data.memory.total;
+                document.getElementById('mem-used').textContent = data.memory.used;
+                document.getElementById('mem-free').textContent = data.memory.free;
+                
+                const memPercent = (data.memory.used / data.memory.total * 100).toFixed(1);
+                document.getElementById('mem-bar').style.width = `${memPercent}%`;
+                
+                // Update System info
+                document.getElementById('os-distro').textContent = `${data.os.distro} (${data.os.platform})`;
+                document.getElementById('os-uptime').textContent = formatUptime(data.os.uptime);
+                document.getElementById('os-arch').textContent = data.os.arch;
+                
+                // Update Storage info
+                const storageContainer = document.getElementById('storage-container');
+                storageContainer.innerHTML = '';
+                
+                data.storage.forEach(disk => {
+                    const diskPercent = (disk.used / disk.size * 100).toFixed(1);
+                    const diskEl = document.createElement('div');
+                    diskEl.className = 'bg-gray-50 rounded-lg p-4';
+                    diskEl.innerHTML = `
+                        <h3 class="font-medium text-gray-700">${disk.mount}</h3>
+                        <p class="text-sm text-gray-500">${disk.fs}</p>
+                        <p class="mt-2"><span class="font-medium">Size:</span> ${disk.size} GB</p>
+                        <p><span class="font-medium">Used:</span> ${disk.used} GB (${diskPercent}%)</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                            <div class="bg-yellow-500 h-2.5 rounded-full" style="width: ${diskPercent}%"></div>
+                        </div>
+                    `;
+                    storageContainer.appendChild(diskEl);
+                });
+                
+                // Update Network info
+                if (data.network) {
+                    document.getElementById('net-interface').textContent = data.network.iface;
+                    document.getElementById('net-rx').textContent = (data.network.rx_bytes / 1024 / 1024).toFixed(2);
+                    document.getElementById('net-tx').textContent = (data.network.tx_bytes / 1024 / 1024).toFixed(2);
+                }
+                
+                // Update CPU chart data
+                cpuHistory.labels.push(timeString);
+                cpuHistory.data.push(data.cpu.usage);
+                
+                if (cpuHistory.data.length > cpuHistory.maxPoints) {
+                    cpuHistory.labels.shift();
+                    cpuHistory.data.shift();
+                }
+                
+                updateCpuChart();
+                
+            } catch (error) {
+                console.error('Error fetching system data:', error);
+            }
+        }
+        
+        // Initialize CPU chart
+        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+        const cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: {
+                labels: cpuHistory.labels,
+                datasets: [{
+                    label: 'CPU Usage %',
+                    data: cpuHistory.data,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+        
+        function updateCpuChart() {
+            cpuChart.data.labels = cpuHistory.labels;
+            cpuChart.data.datasets[0].data = cpuHistory.data;
+            cpuChart.update();
+        }
+        
+        // Fetch data immediately and then every 2 seconds
+        fetchSystemData();
+        setInterval(fetchSystemData, 2000);
+    </script>
 </body>
 </html>
