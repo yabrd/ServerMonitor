@@ -92,6 +92,9 @@
                     </div>
                     <span id="cpu-value" class="text-xl font-digital">--%</span>
                 </div>
+                <div class="mt-2 text-sm">
+                    <span id="cpu-detail">----</span>
+                </div>
             </div>
 
             <!-- Memory -->
@@ -111,8 +114,16 @@
             <!-- Disk -->
             <div class="retro-border p-4 bg-retro-dark">
                 <h2 class="text-retro-amber mb-2">DISK USAGE</h2>
-                <div id="disk-container">
-                    <div class="text-retro-blue">LOADING...</div>
+                <div id ="disk-container">
+                    <div class="flex items-center">
+                        <div class="progress-bar flex-grow mr-3">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <span class="text-xl font-digital">--%</span>
+                    </div>
+                    <div class="mt-2 text-sm">
+                        <span>--</span>/<span>--</span> MB
+                    </div>
                 </div>
             </div>
         </div>
@@ -156,17 +167,19 @@
         // Fetch server stats
         async function fetchStats() {
             try {
-                const response = await fetch('/server.php');
+                const response = await fetch('http://barada.my.id/server.php');
+                // const response = await fetch('server.php');
                 const data = await response.json();
+                console.log(data);
 
                 // Update uptime
-                document.getElementById('uptime').textContent = 
-                    `SYSTEM UPTIME: ${data.uptime.replace('up ', '').toUpperCase()}`;
+                document.getElementById('uptime').textContent = `SYSTEM UPTIME: ${data.uptime.replace('up ', '').toUpperCase()}`;
 
                 // Update CPU
-                const cpuPercent = Math.round(data.cpu * 100) / 100;
+                const cpuPercent = Math.round(data.cpu.usage * 100) / 100;
                 document.getElementById('cpu-value').textContent = `${cpuPercent}%`;
                 document.getElementById('cpu-bar').style.width = `${cpuPercent}%`;
+                document.getElementById('cpu-detail').innerHTML = `${data.cpu.architecture} ${data.cpu.cpu_op_mode} ${data.cpu.byte_order} <br> ${data.cpu.vendor_id} ${data.cpu.model_name} ${data.cpu.threads} threads ${data.cpu.cores} cores`;
 
                 // Update Memory
                 const memPercent = data.memory.percent;
@@ -176,37 +189,39 @@
                 document.getElementById('mem-total').textContent = data.memory.total;
 
                 // Update Disks
-                let diskHtml = '';
-                data.disks.forEach(disk => {
-                    diskHtml += `
-                        <div class="mb-3 last:mb-0">
-                            <div class="flex justify-between text-xs mb-1">
-                                <span>${disk.filesystem}</span>
-                                <span>${disk.used}/${disk.size} (${disk.percent})</span>
+                let storageHtml = '';
+                data.storage.forEach(storage => {
+                    storageHtml += `
+                        <div id ="disk-container" class="mb-2">
+                            <div class="flex items-center">
+                                <div class="progress-bar flex-grow mr-3">
+                                    <div class="progress-fill" style="width: ${storage.percent}"></div>
+                                </div>
+                                <span  class="text-xl font-digital">${storage.percent}</span>
                             </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${disk.percent.replace('%', '')}%"></div>
+                            <div class="mt-2 text-sm flex justify-between">
+                                <span>${storage.used}/${storage.size}</span>
+                                <span class="mr-10">${storage.device}</span>
                             </div>
                         </div>
                     `;
                 });
-                document.getElementById('disk-container').innerHTML = diskHtml;
+                document.getElementById('disk-container').innerHTML = storageHtml;
 
                 // Update Processes
                 let processHtml = '';
-                data.processes.slice(1, 11).forEach(process => {
-                    const parts = process.trim().split(/\s+/);
-                    if (parts.length >= 11) {
-                        processHtml += `
-                            <tr class="border-b border-retro-gray hover:bg-retro-gray">
-                                <td class="p-2">${parts[1]}</td>
-                                <td>${parts[0]}</td>
-                                <td class="text-right">${parts[2]}</td>
-                                <td class="text-right">${parts[3]}</td>
-                                <td class="truncate max-w-xs">${parts.slice(10).join(' ')}</td>
-                            </tr>
-                        `;
-                    }
+        
+                // Loop through processes, assuming data.processes is an array of objects
+                data.processes.slice(0, 10).forEach(process => {
+                    processHtml += `
+                        <tr class="border-b border-retro-gray hover:bg-retro-gray">
+                            <td class="p-2">${process.pid}</td>
+                            <td>${process.user}</td>
+                            <td class="text-right">${process.cpu}%</td>
+                            <td class="text-right">${process.mem}%</td>
+                            <td class="truncate max-w-xs">${process.command}</td>
+                        </tr>
+                    `;
                 });
                 document.getElementById('processes').innerHTML = processHtml;
 
